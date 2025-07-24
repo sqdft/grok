@@ -81,13 +81,13 @@
                 if (response.ok) {
                     aiMessageDiv.textContent = `AI: ${data.message}`;
                 } else {
-                    aiMessageDiv.textContent = `AI: 错误 ${response.status} - ${data.error || '未知错误'}`;
+                    aiMessageDiv.textContent = `AI: 错误 ${response.status} - ${data.error || '未知错误'} (请检查 Vercel 日志或 API 密钥)`;
                 }
                 chatContainer.appendChild(aiMessageDiv);
             } catch (error) {
                 const errorDiv = document.createElement('div');
                 errorDiv.className = 'ai-message';
-                errorDiv.textContent = `AI: 请求失败 - ${error.message}`;
+                errorDiv.textContent = `AI: 请求失败 - ${error.message} (请检查网络或 Vercel 配置)`;
                 chatContainer.appendChild(errorDiv);
             }
             chatContainer.scrollTop = chatContainer.scrollHeight;
