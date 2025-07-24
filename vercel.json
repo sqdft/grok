@@ -1,0 +1,10 @@
+{
+    "functions": {
+      "api/chat.js": {
+        "runtime": "nodejs18.x"
+      }
+    },
+    "env": {
+      "DEEPSEEK_API_KEY": "@deepseek-api-key"
+    }
+  }

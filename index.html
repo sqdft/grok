@@ -2,58 +2,30 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>AI 聊天</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f0f0f0; }
-        #chat-container { background: white; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; height: 400px; overflow-y: auto; }
-        .user-message, .ai-message { margin: 10px 0; padding: 10px; border-radius: 5px; }
-        .user-message { background: #e3f2fd; }
-        .ai-message { background: #f5f5f5; }
-        #input-container { max-width: 600px; margin: 20px auto; display: flex; }
-        #message-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-        button { padding: 10px 20px; margin-left: 10px; border: none; background: #007bff; color: white; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-    </style>
-    <script src="https://js.puter.com/v2/"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSeek AI助手</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="chat-container"></div>
-    <div id="input-container">
-        <input type="text" id="message-input" placeholder="输入消息...">
-        <button onclick="sendMessage()">发送</button>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 DeepSeek AI助手</h1>
+            <p>基于DeepSeek模型的智能对话助手</p>
+        </div>
+        
+        <div class="chat-container" id="chatContainer">
+            <!-- 聊天消息将在这里显示 -->
+        </div>
+        
+        <div class="input-container">
+            <textarea id="messageInput" placeholder="输入你的问题，按Enter发送，Shift+Enter换行..." rows="2"></textarea>
+            <button id="sendButton">
+                <span id="sendText">发送</span>
+                <span id="sendLoader" class="hidden">●●●</span>
+            </button>
+        </div>
     </div>
-    <script>
-        async function sendMessage() {
-            const input = document.getElementById('message-input');
-            const chatContainer = document.getElementById('chat-container');
-            const message = input.value.trim();
-            if (!message) return;
-
-            const userMessage = document.createElement('div');
-            userMessage.className = 'user-message';
-            userMessage.textContent = `你: ${message}`;
-            chatContainer.appendChild(userMessage);
-            input.value = '';
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-
-            try {
-                const response = await puter.ai.chat(message, { model: 'deepseek' });
-                const aiMessage = document.createElement('div');
-                aiMessage.className = 'ai-message';
-                aiMessage.textContent = `AI: ${response.message.content}`;
-                chatContainer.appendChild(aiMessage);
-            } catch (error) {
-                const errorMessage = document.createElement('div');
-                errorMessage.className = 'ai-message';
-                errorMessage.textContent = `AI: 错误 - ${error.message}`;
-                chatContainer.appendChild(errorMessage);
-            }
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-
-        document.getElementById('message-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') sendMessage();
-        });
-    </script>
+    
+    <script src="script.js"></script>
 </body>
 </html>
