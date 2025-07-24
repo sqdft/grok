@@ -14,18 +14,25 @@ export default async function handler(req, res) {
     }
 
     // 检查环境变量
-    if (!process.env.OPENROUTER_API_KEY) {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
         console.error('OPENROUTER_API_KEY is not set');
         return res.status(500).json({ error: 'Server configuration error: Missing API key' });
     }
 
+    // 验证 API 密钥格式（只包含 ASCII 字符）
+    if (!/^[a-zA-Z0-9-_]+$/.test(apiKey)) {
+        console.error('Invalid OPENROUTER_API_KEY format, contains non-ASCII characters');
+        return res.status(500).json({ error: 'Server configuration error: Invalid API key format' });
+    }
+
     try {
         console.log('Sending request to OpenRouter API with message:', message);
-        console.log('Using API key (first 10 chars):', process.env.OPENROUTER_API_KEY.substring(0, 10));
+        console.log('API key (first 10 chars):', apiKey.substring(0, 10));
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                'Authorization': `Bearer ${apiKey}`,
                 'Content-Type': 'application/json',
                 'HTTP-Referer': 'https://grok-iota-nine.vercel.app',
                 'X-Title': 'AI 聊天'
