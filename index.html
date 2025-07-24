@@ -2,54 +2,26 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 聊天</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        #chat-container {
-            border: 1px solid #ccc;
-            padding: 10px;
-            height: 400px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-        }
-        #chat-container div {
-            margin: 5px 0;
-        }
-        .user-message {
-            text-align: right;
-            color: blue;
-        }
-        .ai-message {
-            text-align: left;
-            color: green;
-        }
-        #input-container {
-            display: flex;
-            gap: 10px;
-        }
-        #message-input {
-            flex-grow: 1;
-            padding: 5px;
-        }
-        button {
-            padding: 5px 10px;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f0f0f0; }
+        #chat-container { background: white; padding: 20px; border-radius: 10px; max-width: 600px; margin: auto; height: 400px; overflow-y: auto; }
+        .user-message, .ai-message { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .user-message { background: #e3f2fd; }
+        .ai-message { background: #f5f5f5; }
+        #input-container { max-width: 600px; margin: 20px auto; display: flex; }
+        #message-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 10px 20px; margin-left: 10px; border: none; background: #007bff; color: white; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
     </style>
+    <script src="https://js.puter.com/v2/"></script>
 </head>
 <body>
-    <h1>AI 聊天</h1>
     <div id="chat-container"></div>
     <div id="input-container">
-        <input type="text" id="message-input" placeholder="输入你的消息...">
+        <input type="text" id="message-input" placeholder="输入消息...">
         <button onclick="sendMessage()">发送</button>
     </div>
-
     <script>
         async function sendMessage() {
             const input = document.getElementById('message-input');
@@ -57,7 +29,6 @@
             const message = input.value.trim();
             if (!message) return;
 
-            // 显示用户消息
             const userMessage = document.createElement('div');
             userMessage.className = 'user-message';
             userMessage.textContent = `你: ${message}`;
@@ -65,35 +36,21 @@
             input.value = '';
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
-            // 调用后端 API
             try {
-                const response = await fetch('/api/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message })
-                });
-
-                const data = await response.json();
-                const aiMessageDiv = document.createElement('div');
-                aiMessageDiv.className = 'ai-message';
-                if (response.ok) {
-                    aiMessageDiv.textContent = `AI: ${data.message}`;
-                } else {
-                    aiMessageDiv.textContent = `AI: 错误 ${response.status} - ${data.error || '未知错误'} (请检查 Vercel 日志或 API 密钥)`;
-                }
-                chatContainer.appendChild(aiMessageDiv);
+                const response = await puter.ai.chat(message, { model: 'deepseek' });
+                const aiMessage = document.createElement('div');
+                aiMessage.className = 'ai-message';
+                aiMessage.textContent = `AI: ${response.message.content}`;
+                chatContainer.appendChild(aiMessage);
             } catch (error) {
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'ai-message';
-                errorDiv.textContent = `AI: 请求失败 - ${error.message} (请检查网络或 Vercel 配置)`;
-                chatContainer.appendChild(errorDiv);
+                const errorMessage = document.createElement('div');
+                errorMessage.className = 'ai-message';
+                errorMessage.textContent = `AI: 错误 - ${error.message}`;
+                chatContainer.appendChild(errorMessage);
             }
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // 按 Enter 键发送消息
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
