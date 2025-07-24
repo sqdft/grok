@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 聊天镜像</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+        <h1 class="text-2xl font-bold mb-4 text-center">AI 聊天</h1>
+        <div id="chat" class="h-96 overflow-y-auto mb-4 p-4 border rounded"></div>
+        <input id="userInput" class="w-full p-2 border rounded mb-2" placeholder="输入消息...">
+        <button onclick="sendMessage()" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">发送</button>
+    </div>
+    <script>
+        const API_KEY = process.env.GROK_API_KEY; // 使用环境变量
+        const API_URL = 'https://api.x.ai/v1/chat/completions';
+
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput').value;
+            if (!userInput) return;
+
+            const chatDiv = document.getElementById('chat');
+            chatDiv.innerHTML += `<div class="mb-2"><strong>你:</strong> ${userInput}</div>`;
+            chatDiv.innerHTML += `<div id="loading" class="mb-2 text-gray-500">发送中...</div>`;
+            document.getElementById('userInput').value = '';
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'grok-3-beta',
+                        messages: [{ role: 'user', content: userInput }],
+                        max_tokens: 1000
+                    })
+                });
+                if (!response.ok) throw new Error(`HTTP 错误: ${response.status}`);
+                const data = await response.json();
+                document.getElementById('loading')?.remove();
+                const reply = data.choices[0].message.content;
+                chatDiv.innerHTML += `<div class="mb-2"><strong>AI:</strong> ${reply}</div>`;
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+            } catch (error) {
+                document.getElementById('loading')?.remove();
+                chatDiv.innerHTML += `<div class="mb-2 text-red-500">错误: ${error.message}</div>`;
+                chatDiv.scrollTop = chatDiv.scrollHeight;
+            }
+        }
+    </script>
+</body>
+</html>
