@@ -3,56 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="grok-api-key" content="{{GROK_API_KEY}}">
-    <title>AI 聊天镜像</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>AI 聊天</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        #chat-container div {
+            margin: 5px 0;
+        }
+        .user-message {
+            text-align: right;
+            color: blue;
+        }
+        .ai-message {
+            text-align: left;
+            color: green;
+        }
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            flex-grow: 1;
+            padding: 5px;
+        }
+        button {
+            padding: 5px 10px;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h1 class="text-2xl font-bold mb-4 text-center">AI 聊天</h1>
-        <div id="chat" class="h-96 overflow-y-auto mb-4 p-4 border rounded"></div>
-        <input id="userInput" class="w-full p-2 border rounded mb-2" placeholder="输入消息...">
-        <button onclick="sendMessage()" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">发送</button>
+<body>
+    <h1>AI 聊天</h1>
+    <div id="chat-container"></div>
+    <div id="input-container">
+        <input type="text" id="message-input" placeholder="输入你的消息...">
+        <button onclick="sendMessage()">发送</button>
     </div>
+
     <script>
-        const API_KEY = document.querySelector('meta[name="grok-api-key"]').getAttribute('content');
-        const API_URL = 'https://api.x.ai/v1/chat/completions';
-
         async function sendMessage() {
-            const userInput = document.getElementById('userInput').value;
-            if (!userInput) return;
+            const input = document.getElementById('message-input');
+            const chatContainer = document.getElementById('chat-container');
+            const message = input.value.trim();
+            if (!message) return;
 
-            const chatDiv = document.getElementById('chat');
-            chatDiv.innerHTML += `<div class="mb-2"><strong>你:</strong> ${userInput}</div>`;
-            chatDiv.innerHTML += `<div id="loading" class="mb-2 text-gray-500">发送中...</div>`;
-            document.getElementById('userInput').value = '';
-            chatDiv.scrollTop = chatDiv.scrollHeight;
+            // 显示用户消息
+            const userMessage = document.createElement('div');
+            userMessage.className = 'user-message';
+            userMessage.textContent = `你: ${message}`;
+            chatContainer.appendChild(userMessage);
+            input.value = '';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
 
+            // 调用后端 API
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${API_KEY}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        model: 'grok-3-beta',
-                        messages: [{ role: 'user', content: userInput }],
-                        max_tokens: 1000
-                    })
+                    body: JSON.stringify({ message })
                 });
-                if (!response.ok) throw new Error(`HTTP 错误: ${response.status}`);
+
                 const data = await response.json();
-                document.getElementById('loading')?.remove();
-                const reply = data.choices[0].message.content;
-                chatDiv.innerHTML += `<div class="mb-2"><strong>AI:</strong> ${reply}</div>`;
-                chatDiv.scrollTop = chatDiv.scrollHeight;
+                const aiMessageDiv = document.createElement('div');
+                aiMessageDiv.className = 'ai-message';
+                if (response.status === 200) {
+                    aiMessageDiv.textContent = `AI: ${data.message}`;
+                } else {
+                    aiMessageDiv.textContent = `AI: 错误 ${response.status} - ${data.error}`;
+                }
+                chatContainer.appendChild(aiMessageDiv);
             } catch (error) {
-                document.getElementById('loading')?.remove();
-                chatDiv.innerHTML += `<div class="mb-2 text-red-500">错误: ${error.message}</div>`;
-                chatDiv.scrollTop = chatDiv.scrollHeight;
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'ai-message';
+                errorDiv.textContent = `AI: 请求失败 - ${error.message}`;
+                chatContainer.appendChild(errorDiv);
             }
+            chatContainer.scrollTop = chatContainer.scrollHeight;
         }
+
+        // 按 Enter 键发送消息
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
     </script>
 </body>
 </html>
