@@ -13,6 +13,7 @@ export default async function handler(req, res) {
 
     // 检查环境变量
     if (!process.env.OPENROUTER_API_KEY) {
+        console.error('OPENROUTER_API_KEY is not set');
         return res.status(500).json({ error: 'Server configuration error: Missing API key' });
     }
 
@@ -36,11 +37,13 @@ export default async function handler(req, res) {
 
         const data = await response.json();
         if (response.ok) {
-            res.status(200).json({ message: data.choices[0].message.content });
+            res.status(200).json({ message: data.choices[0]?.message?.content || 'No response content' });
         } else {
-            res.status(response.status).json({ error: data.error?.message || 'OpenRouter API request failed' });
+            console.error('OpenRouter API error:', data);
+            res.status(response.status).json({ error: data.error?.message || 'OpenRouter API request failed', status: response.status });
         }
     } catch (error) {
+        console.error('API request failed:', error.message);
         res.status(500).json({ error: 'API request failed', details: error.message });
     }
 }
