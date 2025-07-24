@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    // 设置CORS
+    // 设置 CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -21,14 +21,26 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Message is required' });
         }
 
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        // 检查 API 密钥
+        if (!process.env.DEEPSEEK_API_KEY) {
+            console.error('DEEPSEEK_API_KEY is not set');
+            return res.status(500).json({ error: 'Server configuration error: API key missing' });
+        }
+
+        // 使用 OpenRouter 端点和免费模型
+        const apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+        const model = 'deepseek/deepseek-r1:free';
+
+        const response = await fetch(apiUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
+                'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+                'HTTP-Referer': 'https://grok-iota-nine.vercel.app',
+                'X-Title': 'Grok Chat'
             },
             body: JSON.stringify({
-                model: 'deepseek-chat',
+                model: model,
                 messages: [
                     {
                         role: 'system',
@@ -40,20 +52,24 @@ export default async function handler(req, res) {
                     }
                 ],
                 temperature: 0.7,
-                max_tokens: 2048
+                max_tokens: 2048,
+                stream: false
             })
         });
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('DeepSeek API Error:', response.status, errorText);
-            throw new Error(`API Error: ${response.status}`);
+            console.error('OpenRouter API Error:', response.status, errorText);
+            return res.status(response.status).json({ 
+                error: `OpenRouter API error: ${response.status} - ${errorText}`
+            });
         }
 
         const data = await response.json();
         
         if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-            throw new Error('Invalid API response format');
+            console.error('Invalid API response:', data);
+            return res.status(500).json({ error: 'Invalid API response format' });
         }
 
         res.status(200).json({
@@ -62,10 +78,10 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error('Chat API Error:', error);
+        console.error('Chat API Error:', error.message);
         res.status(500).json({ 
             success: false,
-            error: '服务暂时不可用，请稍后再试' 
+            error: `服务暂时不可用: ${error.message}`
         });
     }
 }
