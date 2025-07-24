@@ -68,7 +68,7 @@
             // 调用后端 API
             try {
                 const response = await fetch('/api/chat', {
-                    method: 'POST',
+                    method: 'POST', // 明确指定 POST 方法
                     headers: {
                         'Content-Type': 'application/json'
                     },
@@ -78,10 +78,10 @@
                 const data = await response.json();
                 const aiMessageDiv = document.createElement('div');
                 aiMessageDiv.className = 'ai-message';
-                if (response.status === 200) {
+                if (response.ok) {
                     aiMessageDiv.textContent = `AI: ${data.message}`;
                 } else {
-                    aiMessageDiv.textContent = `AI: 错误 ${response.status} - ${data.error}`;
+                    aiMessageDiv.textContent = `AI: 错误 ${response.status} - ${data.error || '未知错误'}`;
                 }
                 chatContainer.appendChild(aiMessageDiv);
             } catch (error) {
